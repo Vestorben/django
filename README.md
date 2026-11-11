@@ -1,98 +1,74 @@
-# Единство народов
+# Django Configuration Guide
 
-Учебная информационная система культурных мероприятий. Склонируйте репозиторий и откройте терминал в папке проекта:
+Django is a Python web framework with URL routing, HTML templates, forms, authentication, an administration interface, and database migrations. This guide introduces its configuration and points to the official Django 5.2 documentation.
+
+For the application-specific installation steps, database creation commands, and administrator setup, see [SETUP.md](SETUP.md). Actual verification results are recorded in [CHECKS.md](CHECKS.md).
+
+## Install the dependencies
+
+Use Python 3.12 and an activated virtual environment, then install the packages required by this repository:
 
 ```bash
-git clone https://github.com/Vestorben/django.git
-cd django
+python -m pip install -r requirements.txt
+python -m django --version
 ```
 
-## Локальный запуск
+## Understand the settings module
 
-1. Установите **Python 3.12** и **PostgreSQL 17**, запустите службу PostgreSQL.
+Django reads configuration from a Python module selected by `DJANGO_SETTINGS_MODULE`. In this repository, `manage.py` selects the top-level `settings.py` module automatically.
 
-2. Откройте SQL-консоль от имени `postgres` (например, `psql -U postgres`) и выполните две команды. Замените пароль своим:
+| Setting | Purpose |
+| --- | --- |
+| `SECRET_KEY` | Signing key; replace the example value with your own random key. |
+| `DEBUG` | Enables detailed development error pages. |
+| `ALLOWED_HOSTS` | Lists accepted hostnames. |
+| `INSTALLED_APPS` | Enables Django applications, including authentication and administration. |
+| `MIDDLEWARE` | Configures request handling, sessions, authentication, and CSRF protection. |
+| `ROOT_URLCONF` | Selects the URL configuration module. |
+| `TEMPLATES` | Configures template directories and context processors. |
+| `DATABASES` | Defines database connections. |
+| `TIME_ZONE` and `USE_TZ` | Configure local time display and timezone support. |
+| `STATIC_URL` and `STATICFILES_DIRS` | Configure local CSS and other static assets. |
 
-   ```sql
-   CREATE USER unity_user WITH PASSWORD 'change-this-password';
-   CREATE DATABASE unity OWNER unity_user;
-   ```
+Keep `DEBUG = True` for local development only. When disabling it, configure `ALLOWED_HOSTS` for the intended hostnames.
 
-3. Создайте и активируйте виртуальное окружение.
+## Configure PostgreSQL
 
-   **Windows (PowerShell):**
+Install PostgreSQL 17, create a database and database user as described in [SETUP.md](SETUP.md), then fill in the connection parameters in `settings.py`:
 
-   ```powershell
-   py -3.12 -m venv .venv
-   .venv\Scripts\Activate.ps1
-   ```
+```python
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "unity",
+        "USER": "unity_user",
+        "PASSWORD": "replace-with-your-database-password",
+        "HOST": "127.0.0.1",
+        "PORT": "5432",
+    }
+}
+```
 
-   **Linux/macOS:**
+The driver is `psycopg`, installed through `psycopg[binary]` in `requirements.txt`. This application also uses SQLAlchemy, which reads the same connection settings and manages separate event, registration, and review tables.
 
-   ```bash
-   python3.12 -m venv .venv
-   source .venv/bin/activate
-   ```
+## Initialize and check the application
 
-   Установите зависимости (далее команды одинаковы для обеих систем):
-
-   ```bash
-   python -m pip install -r requirements.txt
-   ```
-
-4. В `settings.py` заполните `DATABASES["default"]`: `NAME`, `USER`, `PASSWORD`, `HOST`, `PORT`. Укажите пароль из шага 2. Замените `SECRET_KEY`; новый ключ можно получить командой:
-
-   ```bash
-   python -c "import secrets; print(secrets.token_urlsafe(50))"
-   ```
-
-5. Создайте служебные таблицы Django:
-
-   ```bash
-   python manage.py migrate
-   ```
-
-6. Создайте таблицы SQLAlchemy:
-
-   ```bash
-   python init_db.py
-   ```
-
-   `create_all` создаёт отсутствующие таблицы, но **не обновляет структуру существующих**. После изменения моделей структуру существующей учебной базы нужно менять отдельно.
-
-7. Создайте администратора:
-
-   ```bash
-   python manage.py createsuperuser
-   ```
-
-   Создание администратора встроено в Django. В нашем коде права проверяются на сервере через `request.user.is_superuser`. Обычная регистрация создаёт участника. Пользователи доступны по адресу `/admin/`, мероприятия — по адресу `/management/`.
-
-8. При желании загрузите восемь вымышленных мероприятий:
-
-   ```bash
-   python seed_data.py
-   ```
-
-   Даты новых событий рассчитываются относительно дня запуска. Есть будущие, прошедшие и отменённое событие. Повторный запуск не дублирует и не перезаписывает события. Скрипт не создаёт пользователей.
-
-9. Запустите сайт:
-
-   ```bash
-   python manage.py runserver
-   ```
-
-10. Откройте **http://127.0.0.1:8000/**. Войдите под администратором или зарегистрируйтесь как участник. Время на сайте московское.
-
-## Кратко о коде и проверках
-
-Django управляет авторизацией, пользователями и служебными таблицами. `database.py` описывает только три таблицы SQLAlchemy с префиксом `culture_`; параметры подключения берутся из `settings.py`. Пользователь связан с заявкой и отзывом по его Django ID, без описания таблицы `auth_user` в SQLAlchemy. При удалении пользователя из Django Admin исторические заявки и отзывы сохраняются с подписью «Удалённый пользователь»; такие заявки продолжают занимать места. Отмена своей записи разрешена до начала события. Отмена события администратором сохраняет заявки и закрывает запись окончательно.
-
-Автоматические проверки запускаются стандартным `unittest`:
+Once the settings are complete, initialize the two sets of tables:
 
 ```bash
-python -m unittest -v
+python manage.py migrate
+python init_db.py
+python manage.py createsuperuser
 python manage.py check
+python manage.py runserver
 ```
 
-Тесты используют две временные базы SQLite в памяти и не обращаются к рабочей PostgreSQL. Они проверяют формы, права, запись и отмену, отзывы, CSRF, экранирование и демонстрационные данные. Это не проверка интеграции с PostgreSQL 17. Фактические результаты проверки приложены в `CHECKS.md`.
+Django migrations create the authentication, administration, and session tables. The separate initialization script creates SQLAlchemy tables; it does not update existing table structures. Open http://127.0.0.1:8000/ after starting the development server.
+
+## Official documentation
+
+- [Django 5.2 documentation](https://docs.djangoproject.com/en/5.2/)
+- [First application tutorial](https://docs.djangoproject.com/en/5.2/intro/tutorial01/)
+- [How settings work](https://docs.djangoproject.com/en/5.2/topics/settings/)
+- [Settings reference](https://docs.djangoproject.com/en/5.2/ref/settings/)
+- [PostgreSQL database notes](https://docs.djangoproject.com/en/5.2/ref/databases/#postgresql-notes)
