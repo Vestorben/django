@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}
+  Страница не найдена — Единство народов
+{% endblock %}
+{% block content %}
+  <div class="empty-state">
+    <p class="eyebrow">Ошибка 404</p>
+    <h1>Страница не найдена</h1>
+    <p>Проверьте адрес или выберите мероприятие в афише.</p>
+    <a href="{% url 'event_list' %}">Вернуться к афише</a>
+  </div>
+{% endblock %}

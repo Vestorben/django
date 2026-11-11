@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}
+  Управление — Единство народов
+{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Администратор</p>
+      <h1>Управление мероприятиями</h1>
+      <p class="lead">Сводка, редактирование и списки участников.</p>
+    </div>
+    <a class="button" href="{% url 'event_create' %}">Добавить мероприятие</a>
+  </div>
+  <div class="summary">
+    <div class="panel">
+      <span>Всего мероприятий</span>
+      <strong>{{ total }}</strong>
+    </div>
+    <div class="panel">
+      <span>Всего заявок</span>
+      <strong>{{ registrations }}</strong>
+    </div>
+    <div class="panel">
+      <span>Отменено событий</span>
+      <strong>{{ cancelled_count }}</strong>
+    </div>
+  </div>
+  <div class="section-heading">
+    <h2>Все мероприятия</h2>
+    <a href="{% url 'admin:auth_user_changelist' %}">Пользователи в Django Admin →</a>
+  </div>
+  <div class="panel table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Мероприятие</th>
+          <th>Дата начала</th>
+          <th>Статус</th>
+          <th>Заявки / места</th>
+          <th>Действие</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for event in events %}
+          <tr>
+            <td>
+              <a class="table-title" href="{% url 'event_detail' event.id %}">{{ event.title }}</a>
+              <small class="table-region">{{ event.region }}</small>
+            </td>
+            <td class="nowrap">{{ event.starts_at|date:"d.m.Y H:i" }}</td>
+            <td>
+              <span class="status {% if event.is_cancelled %}status-cancelled{% endif %}">{{ event.status }}</span>
+            </td>
+            <td>{{ event.registration_count }} / {{ event.capacity }}</td>
+            <td>
+              <a href="{% url 'event_edit' event.id %}">Изменить</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5">Мероприятий пока нет. Добавьте первое.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">Список участников доступен на странице каждого мероприятия.</p>
+{% endblock %}

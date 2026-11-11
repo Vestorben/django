@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}
+  Доступ ограничен — Единство народов
+{% endblock %}
+{% block content %}
+  <div class="empty-state">
+    <p class="eyebrow">Ошибка 403</p>
+    <h1>Недостаточно прав</h1>
+    <p>Это действие недоступно вашей учётной записи.</p>
+    <a href="{% url 'event_list' %}">Вернуться к афише</a>
+  </div>
+{% endblock %}

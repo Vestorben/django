@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}
+  Мои мероприятия — Единство народов
+{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Личный кабинет · {{ user.username }}</p>
+      <h1>Мои мероприятия</h1>
+      <p class="lead">Ваши записи и история участия.</p>
+    </div>
+    <a href="{% url 'event_list' %}" class="button button-secondary">Выбрать мероприятие</a>
+  </div>
+  <section class="my-section">
+    <h2>
+      Предстоящие и текущие
+      <span class="muted">· {{ upcoming|length }}</span>
+    </h2>
+    <div class="event-grid">
+      {% for event in upcoming %}
+        {% include 'event_card.html' %}
+      {% empty %}
+        <p class="empty-state">У вас пока нет предстоящих мероприятий.</p>
+      {% endfor %}
+    </div>
+  </section>
+  <section class="my-section">
+    <h2>
+      Прошедшие
+      <span class="muted">· {{ past|length }}</span>
+    </h2>
+    <p class="hint">Откройте мероприятие, чтобы оставить отзыв.</p>
+    <div class="event-grid">
+      {% for event in past %}
+        {% include 'event_card.html' %}
+      {% empty %}
+        <p class="empty-state">История участия пока пуста.</p>
+      {% endfor %}
+    </div>
+  </section>
+  <section class="my-section">
+    <h2>
+      Отменены организатором
+      <span class="muted">· {{ cancelled|length }}</span>
+    </h2>
+    <div class="event-grid">
+      {% for event in cancelled %}
+        {% include 'event_card.html' %}
+      {% empty %}
+        <p class="empty-state">Нет отменённых мероприятий.</p>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}
+  {% if event %}
+    Редактирование
+  {% else %}
+    Новое мероприятие
+  {% endif %}
+  — Единство народов
+{% endblock %}
+{% block content %}
+  <a class="back-link" href="{% url 'management' %}">← К управлению</a>
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Администратор</p>
+      <h1>
+        {% if event %}
+          Редактирование мероприятия
+        {% else %}
+          Новое мероприятие
+        {% endif %}
+      </h1>
+      <p class="lead">Все поля обязательны. Даты и время — московские.</p>
+    </div>
+  </div>
+  <div class="editor-layout">
+    <form method="post" class="panel content-panel stack-form event-form">
+      {% csrf_token %}
+      {% include 'form_fields.html' %}
+      <div class="form-actions">
+        <button type="submit" class="button">Сохранить мероприятие</button>
+        <a href="{% url 'management' %}">Вернуться</a>
+      </div>
+    </form>
+    <aside class="editor-note">
+      <h2>Параметры записи</h2>
+      <p>Количество мест должно быть больше нуля. Окончание — позже начала.</p>
+      {% if event %}
+        <p>
+          Заявок сейчас:
+          <strong>{{ count }}</strong>
+          . Вместимость нельзя уменьшить ниже этого числа.
+        </p>
+        {% if event.is_cancelled %}
+          <p>Это мероприятие отменено. Редактирование не открывает запись заново.</p>
+        {% endif %}
+      {% else %}
+        <p>После сохранения мероприятие появится в общей афише.</p>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}

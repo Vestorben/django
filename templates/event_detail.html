@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block title %}
+  {{ event.title }} — Единство народов
+{% endblock %}
+{% block content %}
+  <a class="back-link" href="{% url 'event_list' %}">← К афише</a>
+  <div class="detail-heading">
+    <div class="tags">
+      <span class="category">{{ event.category_label }}</span>
+      <span class="status {% if event.is_cancelled %}status-cancelled{% endif %}">{{ event.status }}</span>
+    </div>
+    <h1>{{ event.title }}</h1>
+    <p class="lead">{{ event.region }}</p>
+  </div>
+  {% if event.is_cancelled %}
+    <p class="message error">Организатор отменил мероприятие. Существующие заявки сохранены, новая запись недоступна.</p>
+  {% endif %}
+  <div class="detail-layout">
+    <div class="detail-main">
+      <section class="panel content-panel">
+        <h2>О мероприятии</h2>
+        <div class="prose">{{ event.description|linebreaks }}</div>
+      </section>
+      <section class="panel content-panel" id="reviews">
+        <h2>
+          Отзывы
+          <span class="muted">· {{ reviews|length }}</span>
+        </h2>
+        {% for review in reviews %}
+          <article class="review">
+            <div class="review-heading">
+              <strong>{{ review.username }}</strong>
+              <span class="rating">{{ review.rating }} / 5</span>
+            </div>
+            <p>{{ review.text|linebreaksbr }}</p>
+            <small>
+              {{ review.created_at|date:"d E Y, H:i" }}
+              {% if review.user_id == user.id %}
+                · Ваш отзыв
+              {% endif %}
+            </small>
+          </article>
+        {% empty %}
+          <p class="muted">Пока нет отзывов.</p>
+        {% endfor %}
+        {% if can_review %}
+          <div class="review-editor">
+            <h3>
+              {% if own_review %}
+                Изменить свой отзыв
+              {% else %}
+                Поделиться впечатлениями
+              {% endif %}
+            </h3>
+            <form action="{% url 'review_save' event.id %}" method="post" class="stack-form">
+              {% csrf_token %}
+              {% include 'form_fields.html' with form=review_form %}
+              <button class="button" type="submit">Сохранить отзыв</button>
+            </form>
+          </div>
+        {% elif not event.is_cancelled %}
+          <p class="hint">Отзыв можно оставить после окончания мероприятия, если вы были на него записаны.</p>
+        {% endif %}
+        {% if own_review %}
+          <form action="{% url 'review_delete' event.id %}" method="post" class="delete-review">
+            {% csrf_token %}
+            <button type="submit" class="text-button danger">Удалить мой отзыв</button>
+          </form>
+        {% endif %}
+      </section>
+      {% if user.is_superuser %}
+        <section class="panel content-panel">
+          <h2>
+            Участники
+            <span class="muted">· {{ count }}</span>
+          </h2>
+          <p class="hint">Этот список доступен только администратору.</p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Имя пользователя</th>
+                  <th>Дата записи</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for participant in participants %}
+                  <tr>
+                    <td>{{ participant.username }}</td>
+                    <td>{{ participant.created_at|date:"d.m.Y H:i" }}</td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="2">Пока никто не записался.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      {% endif %}
+    </div>
+    <aside class="detail-sidebar">
+      <section class="panel content-panel">
+        <h2>Когда и где</h2>
+        <dl class="event-facts">
+          <dt>Начало</dt>
+          <dd>{{ event.starts_at|date:"d E Y, H:i" }}</dd>
+          <dt>Окончание</dt>
+          <dd>{{ event.ends_at|date:"d E Y, H:i" }}</dd>
+          <dt>Место</dt>
+          <dd>{{ event.venue }}</dd>
+          <dt>Свободные места</dt>
+          <dd>{{ available }} из {{ event.capacity }}</dd>
+        </dl>
+        {% if signed_up %}
+          <p class="signed-up">Вы записаны</p>
+          {% if can_leave %}
+            <form method="post" action="{% url 'event_leave' event.id %}">
+              {% csrf_token %}
+              <button type="submit" class="button button-secondary full-width">Отменить свою запись</button>
+            </form>
+          {% endif %}
+        {% elif can_join %}
+          {% if user.is_authenticated %}
+            <form method="post" action="{% url 'event_join' event.id %}">
+              {% csrf_token %}
+              <button type="submit" class="button full-width">Записаться</button>
+            </form>
+          {% else %}
+            <a class="button full-width" href="{% url 'login' %}?next={% url 'event_detail' event.id %}">Войти и записаться</a>
+          {% endif %}
+        {% else %}
+          <p class="hint">
+            {% if event.is_cancelled %}
+              Мероприятие отменено.
+            {% elif available == 0 and event.status == 'Предстоит' %}
+              Все места заняты.
+            {% else %}
+              Запись завершена.
+            {% endif %}
+          </p>
+        {% endif %}
+        <p class="hint">Время указано по Москве.</p>
+      </section>
+      {% if user.is_superuser %}
+        <section class="panel content-panel admin-actions">
+          <h2>Для администратора</h2>
+          <a class="button button-secondary full-width" href="{% url 'event_edit' event.id %}">Редактировать</a>
+          {% if not event.is_cancelled %}
+            <form action="{% url 'event_cancel' event.id %}" method="post">
+              {% csrf_token %}
+              <label class="confirm-label">
+                <input type="checkbox" required>
+                Подтверждаю отмену мероприятия
+              </label>
+              <button class="button button-danger full-width" type="submit">Отменить мероприятие</button>
+            </form>
+            <p class="hint">Заявки сохранятся. Отмена окончательная.</p>
+          {% endif %}
+        </section>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}

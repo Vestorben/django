@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}
+  Регистрация — Единство народов
+{% endblock %}
+{% block content %}
+  <div class="auth-wrap">
+    <p class="eyebrow">Личный кабинет</p>
+    <h1>Регистрация</h1>
+    <p class="lead">Создайте учётную запись участника.</p>
+    <form method="post" class="panel content-panel stack-form">
+      {% csrf_token %}
+      {% include 'form_fields.html' %}
+      <button class="button full-width" type="submit">Зарегистрироваться</button>
+    </form>
+    <p class="auth-link">
+      Уже зарегистрированы?
+      <a href="{% url 'login' %}">Войти</a>
+    </p>
+  </div>
+{% endblock %}

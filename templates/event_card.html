@@ -1,0 +1,36 @@
+<article class="event-card {% if event.is_cancelled %}cancelled-card{% endif %}">
+  <div class="card-top">
+    <span class="category">{{ event.category_label }}</span>
+    <span class="status {% if event.is_cancelled %}status-cancelled{% endif %}">{{ event.status }}</span>
+  </div>
+  <p class="card-date">
+    <time datetime="{{ event.starts_at|date:'c' }}">{{ event.starts_at|date:"d E Y" }}</time>
+    <span>{{ event.starts_at|date:"H:i" }}–{{ event.ends_at|date:"H:i" }}</span>
+  </p>
+  <h2>
+    <a href="{% url 'event_detail' event.id %}">{{ event.title }}</a>
+  </h2>
+  <p class="card-region">{{ event.region }}</p>
+  <p class="card-venue">{{ event.venue }}</p>
+  <div class="card-bottom">
+    <span>
+      {% if event.is_cancelled %}
+        Запись закрыта
+      {% elif event.status == 'Предстоит' %}
+        {% if event.available == 0 %}
+          Мест нет
+        {% elif event.available != None %}
+          Свободных мест: {{ event.available }}
+        {% else %}
+          Вы записаны
+        {% endif %}
+      {% else %}
+        Запись закрыта
+      {% endif %}
+    </span>
+    <a href="{% url 'event_detail' event.id %}" aria-label="Подробнее: {{ event.title }}">
+      Подробнее
+      <span aria-hidden="true">→</span>
+    </a>
+  </div>
+</article>

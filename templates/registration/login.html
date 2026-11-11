@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}
+  Вход — Единство народов
+{% endblock %}
+{% block content %}
+  <div class="auth-wrap">
+    <p class="eyebrow">Личный кабинет</p>
+    <h1>Войти</h1>
+    <p class="lead">Записывайтесь на мероприятия и делитесь впечатлениями.</p>
+    <form method="post" class="panel content-panel stack-form">
+      {% csrf_token %}
+      {% include 'form_fields.html' %}
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="button full-width" type="submit">Войти</button>
+    </form>
+    <p class="auth-link">
+      Ещё нет учётной записи?
+      <a href="{% url 'register' %}">Зарегистрироваться</a>
+    </p>
+  </div>
+{% endblock %}

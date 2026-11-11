@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}
+  Афиша — Единство народов
+{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Год единства народов России</p>
+      <h1>Афиша мероприятий</h1>
+      <p class="lead">Выставки, встречи и мастер-классы в регионах России.</p>
+    </div>
+    {% if user.is_superuser %}
+      <a class="button" href="{% url 'event_create' %}">Добавить мероприятие</a>
+    {% endif %}
+  </div>
+  <form class="filters panel" method="get" role="search">
+    <div class="search-field">
+      <label for="q">Название мероприятия</label>
+      <input type="search" id="q" name="q" value="{{ query }}" maxlength="160" placeholder="Например, керамика">
+    </div>
+    <div>
+      <label for="region">Регион</label>
+      <select name="region" id="region">
+        <option value="">Все регионы</option>
+        {% for item in regions %}
+          <option value="{{ item }}" {% if region == item %}selected{% endif %}>{{ item }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="category">Категория</label>
+      <select name="category" id="category">
+        <option value="">Все категории</option>
+        {% for value, label in categories %}
+          <option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="button">Найти</button>
+  </form>
+  <div class="results-heading">
+    <p>
+      Найдено:
+      <strong>{{ events|length }}</strong>
+    </p>
+    {% if query or region or category %}
+      <a href="{% url 'event_list' %}">Сбросить фильтры</a>
+    {% endif %}
+  </div>
+  <div class="event-grid">
+    {% for event in events %}
+      {% include 'event_card.html' %}
+    {% empty %}
+      <div class="empty-state">
+        <h2>Мероприятия не найдены</h2>
+        <p>Попробуйте другое название или сбросьте фильтры.</p>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}
